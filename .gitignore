@@ -2,11 +2,14 @@
 *.class
 *.jar
 
-# IntelliJ config
-.idea/
-
 # outputs
 out/
+
+# saves
+data/
+
+# IntelliJ config
+.idea/
 
 # iml
 *.iml
