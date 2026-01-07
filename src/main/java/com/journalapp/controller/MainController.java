@@ -213,9 +213,7 @@ public class MainController extends Application {
         journalsBtn.setStyle(fullStyle);
         logoutBtn.setStyle(fullStyle);
         collapseBtn.setStyle(fullStyle);
-
-        // User button needs bold
-        userBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #2c3e50; -fx-font-size: 18px; -fx-alignment: " + align + ";");
+        userBtn.setStyle(fullStyle);
     }
 
     private void openTodayEntry() {

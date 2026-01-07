@@ -152,7 +152,7 @@ public class DashboardController {
         graphHeader.getChildren().addAll(graphTitle, graphSpacer, new Label("Year: "), yearSelector);
 
         // Create the Graph Container and Draw Initial Data
-        VBox moodGraphContainer = createMoodContributionGraph();
+        VBox moodGraphContainer = createMoodGraph();
         drawCalendarGraph(selectedYear);
 
         graphSection.getChildren().addAll(graphHeader, moodGraphContainer);
@@ -379,7 +379,6 @@ public class DashboardController {
         card.setPrefHeight(140);
         card.setStyle("-fx-background-color: white; -fx-background-radius: 15;");
 
-        // JavaFX DropShadow Effect
         DropShadow shadow = new DropShadow();
         shadow.setColor(Color.rgb(0, 0, 0, 0.1));
         shadow.setRadius(15);
@@ -397,28 +396,74 @@ public class DashboardController {
         yearSelector.setItems(FXCollections.observableArrayList(sortedYears));
     }
 
-    private VBox createMoodContributionGraph() {
+    private VBox createMoodGraph() {
         VBox container = new VBox(15);
         container.setPadding(new Insets(20));
         container.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);");
 
-        // Initialize the GridPane
-        graphGrid = new GridPane();
+        // Wrapper: Holds Fixed Labels (Left) + Scrollable Graph (Right)
+        container.setMinHeight(250);
+        HBox graphWrapper = new HBox(10);
+        graphWrapper.setAlignment(Pos.TOP_LEFT);
 
-        // --- CHANGE HERE: Increased gaps from 3 to 7 ---
+        // Define Grid Rules
+        RowConstraints headerRowConstraint = new RowConstraints(15);
+        headerRowConstraint.setValignment(javafx.geometry.VPos.BOTTOM);
+
+        // Rule 2: Day Rows (The Pixels) - Fixed height 12px (matches rectangle height)
+        RowConstraints dayRowConstraint = new RowConstraints(12);
+        dayRowConstraint.setValignment(javafx.geometry.VPos.CENTER);
+
+        // Fixed Day Labels
+        GridPane labelsGrid = new GridPane();
+        labelsGrid.setVgap(7);
+        labelsGrid.setPadding(new Insets(0, 5, 0, 0));
+        labelsGrid.setMinWidth(30); // Prevent shrinking
+
+        // Apply Rules to Left Grid
+        labelsGrid.getRowConstraints().add(headerRowConstraint); // Row 0
+        for (int i = 0; i < 7; i++) labelsGrid.getRowConstraints().add(dayRowConstraint); // Rows 1-7
+
+        // Invisible Spacer for Row 0
+        Label spacer = new Label("Jan");
+        spacer.setFont(Font.font("Segoe UI", 10));
+        spacer.setVisible(false);
+        labelsGrid.add(spacer, 0, 0);
+
+        // Add Day Labels (Sun to Sat) with vertical centering
+        String[] days = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+        for (int i = 0; i < 7; i++) {
+            Label lbl = new Label(days[i]);
+            lbl.setFont(Font.font("Segoe UI", 10));
+            lbl.setTextFill(Color.web("#b2bec3"));
+            // Ensure the text itself is centered in its 12px slot
+            lbl.setMaxHeight(Double.MAX_VALUE);
+            lbl.setAlignment(Pos.CENTER_LEFT);
+            labelsGrid.add(lbl, 0, i + 1);
+        }
+
+        // Scroll Graph
+        graphGrid = new GridPane();
         graphGrid.setHgap(7);
         graphGrid.setVgap(7);
-        graphGrid.setAlignment(Pos.CENTER_LEFT);
+        graphGrid.setAlignment(Pos.TOP_LEFT);
+        graphGrid.setPadding(new Insets(0, 0, 20, 0)); // Add 20px of buffer
 
-        // --- CHANGE HERE: Added ScrollPane wrapper ---
+        graphGrid.getRowConstraints().add(headerRowConstraint); // Row 0
+        for (int i = 0; i < 7; i++) graphGrid.getRowConstraints().add(dayRowConstraint); // Rows 1-7
+
         ScrollPane gridScrollPane = new ScrollPane(graphGrid);
         gridScrollPane.setFitToHeight(true);
-        gridScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); // Hide vertical bar
-        gridScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED); // Show horizontal only if needed
+        gridScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        gridScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        gridScrollPane.setMinHeight(160);
         gridScrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
 
-        // Add the ScrollPane instead of the raw grid
-        container.getChildren().addAll(gridScrollPane, createLegend());
+        HBox.setHgrow(labelsGrid, Priority.NEVER);
+        HBox.setHgrow(gridScrollPane, Priority.ALWAYS);
+
+        graphWrapper.getChildren().addAll(labelsGrid, gridScrollPane);
+        container.getChildren().addAll(graphWrapper, createLegend());
         return container;
     }
 
@@ -432,33 +477,25 @@ public class DashboardController {
         // Variables to track grid positioning
         int column = 0;
         LocalDate cursor = start;
-        java.time.Month currentMonth = null; // Track month changes
+        java.time.Month currentMonth = null;
 
         while (!cursor.isAfter(end)) {
-            // 1. Determine Day Row (0=Sun, 1=Mon... 6=Sat)
             int dayOfWeek = cursor.getDayOfWeek().getValue();
             int row = (dayOfWeek == 7) ? 0 : dayOfWeek;
 
-            // 2. Month Label Logic (Row 0)
-            // If the month has changed, place a label at the current column
             if (cursor.getMonth() != currentMonth) {
                 currentMonth = cursor.getMonth();
-
-                // Only draw label if it's not the very last column (prevents cut-off)
+                // Only draw if not too close to the right edge
                 if (column < 51) {
                     Label monthLabel = new Label(currentMonth.getDisplayName(java.time.format.TextStyle.SHORT, Locale.ENGLISH));
                     monthLabel.setFont(Font.font("Segoe UI", 10));
                     monthLabel.setTextFill(Color.GRAY);
 
-                    // Add to Grid at (Column, Row 0)
                     graphGrid.add(monthLabel, column, 0);
-
-                    // Let the label span 2 columns so "Sep" or "Dec" fits nicely
                     GridPane.setColumnSpan(monthLabel, 2);
                 }
             }
 
-            // 3. Pixel Logic (Row 1 to 7)
             Rectangle rect = new Rectangle(12, 12);
             rect.setArcWidth(3); rect.setArcHeight(3);
 
@@ -466,15 +503,10 @@ public class DashboardController {
             rect.setFill(getColorForMood(mood));
 
             Tooltip.install(rect, new Tooltip(cursor.format(DateTimeFormatter.ofPattern("MMM d, yyyy")) + "\n" + mood));
-
-            // NOTE: We add 'row + 1' because Row 0 is now taken by the Month Labels
             graphGrid.add(rect, column, row + 1);
-
-            // 4. Move to next column after Saturday
             if (row == 6) {
                 column++;
             }
-
             cursor = cursor.plusDays(1);
         }
     }
