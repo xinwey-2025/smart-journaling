@@ -51,19 +51,44 @@ public class JournalsController {
         if (Session.hasActiveUser()) {
             List<Entry> myEntries = Session.listEntries();
 
+            boolean showCreateToday = true;
+
+            if (myEntries != null && !myEntries.isEmpty()) {
+                // check all the entry whether user had write journal or not today
+                for (Entry entry : myEntries) {
+                    if (entry.getDate().isEqual(java.time.LocalDate.now())) {
+                        showCreateToday = false;
+                        break;
+                    }
+                }
+            }
+
+            if (showCreateToday) {
+                Label createTodayLabel = new Label("Create your journal today ✨");
+                createTodayLabel.setStyle(
+                        "-fx-text-fill: #FFA366;" +
+                                "-fx-font-size: 16px;" +
+                                "-fx-font-weight: bold;" +
+                                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 2,0,0,1);"
+                );
+                createTodayLabel.setAlignment(Pos.CENTER);
+                journalListContainer.setAlignment(Pos.TOP_CENTER);
+                journalListContainer.getChildren().add(createTodayLabel);
+            }
+
+            // show all the journal card
             if (myEntries != null && !myEntries.isEmpty()) {
                 Collections.reverse(myEntries);
                 for (Entry entry : myEntries) {
                     journalListContainer.getChildren().add(createJournalCard(entry));
                 }
-            } else {
-                Label emptyLabel = new Label("Start writing your first journal ✨");
-                emptyLabel.setStyle("-fx-text-fill: #666; -fx-font-size: 14px; -fx-alignment: center;");
-                journalListContainer.setAlignment(Pos.CENTER);
-                journalListContainer.getChildren().add(emptyLabel);
             }
+
         } else {
-            journalListContainer.getChildren().add(new Label("Please log in to see your journals."));
+            Label loginLabel = new Label("Please log in to see your journals.");
+            loginLabel.setStyle("-fx-text-fill: #FFA366; -fx-font-size: 14px;");
+            journalListContainer.setAlignment(Pos.CENTER);
+            journalListContainer.getChildren().add(loginLabel);
         }
     }
 
