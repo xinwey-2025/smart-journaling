@@ -69,15 +69,28 @@ public class DashboardController {
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Button writeNowBtn = new Button("+ Write New Entry");
-        writeNowBtn.setStyle(
-                "-fx-background-color: #2d3436; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-font-size: 14px; " +
-                        "-fx-font-weight: bold; " +
-                        "-fx-padding: 10 20 10 20; " +
-                        "-fx-background-radius: 30; " +
-                        "-fx-cursor: hand;"
-        );
+        String defaultStyle = "-fx-background-color: #2d3436; " +
+                "-fx-text-fill: white; " +
+                "-fx-font-size: 14px; " +
+                "-fx-font-weight: bold; " +
+                "-fx-padding: 10 20 10 20; " +
+                "-fx-background-radius: 30; " +
+                "-fx-cursor: hand;";
+
+        String hoverStyle = "-fx-background-color: #636e72; " + // Lighter Grey
+                "-fx-text-fill: white; " +
+                "-fx-font-size: 14px; " +
+                "-fx-font-weight: bold; " +
+                "-fx-padding: 10 20 10 20; " +
+                "-fx-background-radius: 30; " +
+                "-fx-cursor: hand;" +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 3);";
+
+        writeNowBtn.setStyle(defaultStyle);
+
+        writeNowBtn.setOnMouseEntered(e -> writeNowBtn.setStyle(hoverStyle));
+        writeNowBtn.setOnMouseExited(e -> writeNowBtn.setStyle(defaultStyle));
+
         writeNowBtn.setOnAction(e -> {
             if (onWriteNow != null) onWriteNow.run();
         });

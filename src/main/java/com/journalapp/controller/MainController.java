@@ -1,6 +1,7 @@
 package main.java.com.journalapp.controller;
 
 import javafx.application.Application;
+import javafx.scene.control.Label;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -110,22 +111,20 @@ public class MainController extends Application {
         divider.setStyle("-fx-border-color: rgba(0,0,0,0.1); -fx-border-width: 0 0 1 0;");
         divider.setMinHeight(10);
 
-        homeBtn = createMenuButton("⌂", "Home");
+        homeBtn = createMenuButton("\uD83C\uDFE0", "Home");
         homeBtn.setOnAction(e -> loadDashboard());
 
-        newEntryBtn = createMenuButton("⊕", "New Entry");
+        newEntryBtn = createMenuButton("\uD83D\uDD89", "Today's Entry");
         newEntryBtn.setOnAction(e -> {
             openTodayEntry();
             loadNewEntry();
         });
 
-        journalsBtn = createMenuButton("d", "Journals");
+        journalsBtn = createMenuButton("\uD83D\uDCD6", "Journals");
         journalsBtn.setOnAction(e -> loadJournals());
 
         logoutBtn = createMenuButton("→", "Log out");
         logoutBtn.setOnAction(e -> logout());
-
-        settingsBtn = createMenuButton("⚙", "Settings");
 
         // Collapse
         collapseBtn = createMenuButton("≡", "Collapse");
@@ -137,7 +136,7 @@ public class MainController extends Application {
         sidebar.getChildren().addAll(
                 userBtn, divider, homeBtn, newEntryBtn, journalsBtn,
                 spacerMiddle,
-                logoutBtn, settingsBtn,
+                logoutBtn,
                 new Region() {{ setMinHeight(30); }},
                 collapseBtn
         );
@@ -149,20 +148,20 @@ public class MainController extends Application {
 
         if (isCollapsed) {
             // Mini mode
-            sidebar.setPrefWidth(70);
+            sidebar.setPrefWidth(80);
             sidebar.setAlignment(Pos.TOP_CENTER);
             sidebar.setPadding(new Insets(40, 10, 40, 10));
 
             // Hide text, keep icons
-            updateButtonText(userBtn, "\uD83D\uDC64","");
-            updateButtonText(homeBtn, "⌂", "");
-            updateButtonText(newEntryBtn, "⊕", "");
-            updateButtonText(journalsBtn, "d", "");
-            updateButtonText(logoutBtn, "→", "");
-            updateButtonText(settingsBtn, "⚙", "");
+            setButtonLabel(userBtn, "");
+            setButtonLabel(homeBtn, "");
+            setButtonLabel(newEntryBtn, "");
+            setButtonLabel(journalsBtn, "");
+            setButtonLabel(logoutBtn, "");
 
             // Change collapse btn to expand btn
-            updateButtonText(collapseBtn, "»", "");
+            updateButtonIcon(collapseBtn, "»");
+            setButtonLabel(collapseBtn, "");
             collapseBtn.setTooltip(new Tooltip("Expand Sidebar"));
 
         } else {
@@ -174,20 +173,32 @@ public class MainController extends Application {
             String currentUsername = (Session.getUsername() != null) ? Session.getUsername() : "";
 
             // Show text
-            updateButtonText(userBtn, "\uD83D\uDC64", currentUsername);
-            updateButtonText(homeBtn, "⌂", "Home");
-            updateButtonText(newEntryBtn, "⊕", "New Entry");
-            updateButtonText(journalsBtn, "d", "Journals");
-            updateButtonText(logoutBtn, "→", "Log out");
-            updateButtonText(settingsBtn, "⚙", "Settings");
+            setButtonLabel(userBtn, currentUsername);
+            setButtonLabel(homeBtn, "Home");
+            setButtonLabel(newEntryBtn, "Today's Entry");
+            setButtonLabel(journalsBtn, "Journals");
+            setButtonLabel(logoutBtn, "Log out");
 
             // Change btn back to collapse
-            updateButtonText(collapseBtn, "≡", "Collapse");
+            updateButtonIcon(collapseBtn, "≡");
+            setButtonLabel(collapseBtn, "Collapse");
             collapseBtn.setTooltip(new Tooltip("Collapse Sidebar"));
         }
 
         refreshButtonStyles();
     }
+
+    private void setButtonLabel(Button btn, String text) {
+        btn.setText(text);
+    }
+
+    private void updateButtonIcon(Button btn, String newIcon) {
+        if (btn.getGraphic() instanceof Label) {
+            ((Label) btn.getGraphic()).setText(newIcon);
+        }
+    }
+
+
 
     // Helper to force buttons to snap to Left or Center immediately
     private void refreshButtonStyles() {
@@ -201,19 +212,10 @@ public class MainController extends Application {
         newEntryBtn.setStyle(fullStyle);
         journalsBtn.setStyle(fullStyle);
         logoutBtn.setStyle(fullStyle);
-        settingsBtn.setStyle(fullStyle);
         collapseBtn.setStyle(fullStyle);
 
         // User button needs bold
-        userBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #2c3e50; -fx-font-size: 18px; -fx-font-weight: bold; -fx-alignment: " + align + ";");
-    }
-
-    private void updateButtonText(Button btn, String icon, String text) {
-        if (text.isEmpty()) {
-            btn.setText(icon); // Icon Only
-        } else {
-            btn.setText(icon + "   " + text); // Icon + Text
-        }
+        userBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #2c3e50; -fx-font-size: 18px; -fx-alignment: " + align + ";");
     }
 
     private void openTodayEntry() {
@@ -238,44 +240,56 @@ public class MainController extends Application {
 
     // Set Style
     private Button createMenuButton(String iconText, String labelText) {
-        Button btn = new Button(iconText + "   " + labelText);
-
-        String baseStyle = "-fx-background-color: transparent; -fx-text-fill: #1a1a1a; -fx-font-size: 16px; -fx-cursor: hand;";
-        btn.setStyle(baseStyle + "-fx-alignment: CENTER_LEFT;");
-
-        // Hover Effects (Centers the icon if collapsed)
-        btn.setOnMouseEntered(e -> {
-            String align = isCollapsed ? "CENTER" : "CENTER_LEFT";
-            btn.setStyle(baseStyle + "-fx-background-color: rgba(255,255,255,0.4); -fx-background-radius: 5; -fx-alignment: " + align + ";");
-        });
-
-        btn.setOnMouseExited(e -> {
-            String align = isCollapsed ? "CENTER" : "CENTER_LEFT";
-            btn.setStyle(baseStyle + "-fx-alignment: " + align + ";");
-        });
-
-        btn.setMaxWidth(Double.MAX_VALUE);
-
-        // Initial Tooltip
-        btn.setTooltip(new Tooltip(labelText));
-
-        return btn;
+        return buildButtonBase(iconText,labelText, true);
     }
 
     // Without hovering effects button
     private Button createMenuButton2(String iconText, String labelText) {
-        Button btn = new Button(iconText + "   " + labelText);
+        return buildButtonBase(iconText,labelText, false);
+    }
 
-        String baseStyle = "-fx-background-color: transparent; -fx-text-fill: #1a1a1a; -fx-font-size: 16px; -fx-cursor: hand;";
-        btn.setStyle(baseStyle + "-fx-alignment: CENTER_LEFT;");
+    // Use fixed button logic
+    private Button buildButtonBase(String iconStr, String textStr, boolean hoverEffect) {
+        // Create the Icon as a separate Label
+        Label iconLabel = new Label(iconStr);
+        iconLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #1a1a1a;");
+        iconLabel.setMinWidth(35); // CRITICAL: Fixed width ensures alignment
+        iconLabel.setAlignment(Pos.CENTER);
 
+        // Create the Button with the Icon set as a Graphic
+        Button btn = new Button(textStr);
+        btn.setGraphic(iconLabel);
+        btn.setGraphicTextGap(15); // Space between Icon and Text
         btn.setMaxWidth(Double.MAX_VALUE);
 
+        // Base Style
+        String baseStyle = "-fx-background-color: transparent; -fx-text-fill: #1a1a1a; -fx-font-size: 16px; -fx-cursor: hand;";
+
+        // Initial Alignment
+        btn.setStyle(baseStyle + "-fx-alignment: CENTER_LEFT;");
+
+        // Hover Logic
+        if (hoverEffect) {
+            btn.setOnMouseEntered(e -> {
+                String align = isCollapsed ? "CENTER" : "CENTER_LEFT";
+                btn.setStyle(baseStyle + "-fx-background-color: rgba(255,255,255,0.4); -fx-background-radius: 5; -fx-alignment: " + align + ";");
+            });
+
+            btn.setOnMouseExited(e -> {
+                String align = isCollapsed ? "CENTER" : "CENTER_LEFT";
+                btn.setStyle(baseStyle + "-fx-alignment: " + align + ";");
+            });
+        }
+
+        // Store the text in the userData so we can retrieve it later if needed
+        btn.setUserData(textStr);
+
         // Initial Tooltip
-        btn.setTooltip(new Tooltip(labelText));
+        btn.setTooltip(new Tooltip(textStr));
 
         return btn;
     }
+
 
     public static void main(String[] args) {
         launch(args);
