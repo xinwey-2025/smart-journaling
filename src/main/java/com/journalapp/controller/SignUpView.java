@@ -124,8 +124,12 @@ public class SignUpView {
         // The order here matters: the first item in addAll() appears at the top of the VBox
         formContainer.getChildren().addAll(titleLabel, usernameField, emailField, passField, errorLabel, signUpBtn, loginLink);
 
-        // Take the formContainer and put it inside the mainContainer so it stays centered on the gradient background
-        mainContainer.getChildren().add(formContainer);
+        // CREATE FOOTER LABEL
+        Label footerLabel = new Label("By signing in you agree to our terms.");
+        footerLabel.setStyle("-fx-text-fill: #888; -fx-font-size: 12px; -fx-padding: 20 0 0 0;");
+
+        // Add the box and the footer to the main gradient background
+        mainContainer.getChildren().addAll(formContainer, footerLabel);
     }
 
     public void clearFields() {
