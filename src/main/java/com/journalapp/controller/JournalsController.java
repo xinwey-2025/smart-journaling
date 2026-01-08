@@ -98,7 +98,7 @@ public class JournalsController {
 
         // Title
         Label pageTitle = new Label("Journals");
-        pageTitle.setStyle("-fx-font-size: 28px; -fx-font-weight: 300; -fx-text-fill: #333333;");
+        pageTitle.setStyle("-fx-font-family: 'Georgia'; -fx-font-size: 28px; -fx-font-weight: 300; -fx-text-fill: #333333;");
 
         Separator separator = new Separator();
         separator.setOpacity(0.4);

@@ -21,10 +21,12 @@ public class EntryEditorController {
     // Variable to store weather so we can save it later
     private String lastFetchedWeather = "Unknown";
     private Entry entryToEdit = null;
-
+    private Runnable onEntrySaved;
     private TextArea textArea;
     private Label header;
     private Button save;
+
+    public void setOnEntrySaved(Runnable action) {this.onEntrySaved = action;}
 
     // Call to Start Editing Journals
     public void setEntryToEdit(Entry entry) {
@@ -37,13 +39,13 @@ public class EntryEditorController {
         layout.setPadding(new Insets(40, 50, 40, 50));
 
         // Header
-        Label header = new Label("What's on your mind?");
-        header.setFont(Font.font("Georgia", FontWeight.BOLD, 24));
+        Label header = new Label(entryToEdit != null ? "Edit Memory" : "What's on your mind?");
+        header.setFont(Font.font("Georgia", 24));
         header.setStyle("-fx-text-fill: #333;");
 
         // Info Line (Date & Weather)
-        LocalDate today = LocalDate.now();
-        Label prompt = new Label("Entry for " + today + ":");
+        LocalDate displayDate = (entryToEdit != null) ? entryToEdit.getDate() : LocalDate.now();
+        Label prompt = new Label("Entry for " + displayDate + ":");
         prompt.setFont(Font.font("Arial", 14));
 
         Region spacer = new Region();
@@ -73,12 +75,10 @@ public class EntryEditorController {
             });
         }
 
-        // Text Area
         textArea = new TextArea();
         textArea.setWrapText(true);
         textArea.setPromptText("Start writing your thoughts here...");
 
-        // Pre-fill text idf editing
         if (entryToEdit != null) {
             textArea.setText(entryToEdit.getContent());
         }
@@ -96,8 +96,8 @@ public class EntryEditorController {
 
         VBox.setVgrow(textArea, Priority.ALWAYS);
 
-        // Save Button
-        save = new Button("Save Entry");
+        String btnLabel = (entryToEdit != null) ? "Update Entry" : "Save Entry";
+        save = new Button(btnLabel);
         save.setPrefWidth(150);
         save.setPrefHeight(35);
         save.setStyle(
@@ -147,8 +147,6 @@ public class EntryEditorController {
                     try {
                         // --- BRANCHING LOGIC: EDIT OR CREATE? ---
                         if (entryToEdit != null) {
-                            // OPTION A: UPDATE EXISTING
-                            // We keep the original ID and original Date
                             Session.editEntry(
                                     entryToEdit.getId(),
                                     entryToEdit.getDate(), // keep original date
@@ -167,6 +165,9 @@ public class EntryEditorController {
                             Alert alert = new Alert(Alert.AlertType.INFORMATION, "New entry saved!");
                             alert.showAndWait();
                             textArea.clear(); // Only clear if it was a new entry
+                        }
+                        if (onEntrySaved != null) {
+                            onEntrySaved.run(); // Triggers the action in MainController
                         }
 
                     } catch (Exception ex) {

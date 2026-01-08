@@ -61,6 +61,12 @@ public class MainController extends Application {
             loadNewEntry();
         });
 
+        entryEditorView.setOnEntrySaved(() -> {
+            System.out.println("Entry saved! Switching to Journal View.");
+            // Switch the center screen to the Journal List
+            loadJournals();
+        });
+
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         Scene scene = new Scene(
                 loginView.getView(),
