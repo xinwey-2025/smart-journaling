@@ -98,7 +98,7 @@ public class MainController extends Application {
     }
 
     public void showMainApp() {
-        mainAppLayout = null
+        mainAppLayout = null;
         createMainAppLayout();
         primaryStage.getScene().setRoot(mainAppLayout);
         loadDashboard();
